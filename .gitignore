@@ -1,0 +1,5 @@
+*.zip
+*/data/*
+*.xml
+*.idea
+.DS_Store
