@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import os
 import pyarrow.parquet as pq
+import seaborn as sns
 
 #This script requires 'dataExploration.py' to run before to unzip our data
 folder = '/data/'
@@ -10,26 +11,7 @@ filename = 'TopVideoSmall'
 dS = pq.ParquetDataset(os.getcwd() + folder + filename)
 df = dS.read().to_pandas()
 
-## We have mixed types in our dataset
-## Select only numberic columns
-dfNumeric = df.select_dtypes(exclude=['object', 'long', 'datetime64'])
-dfString =  df.select_dtypes(include=['object'])
-
-# Quiz:
-#
-# How many Numeric features do we have?
-# How many are categorical?
-# How many related to dates? (types: long, datetime64)
-#####
-
-
-#####
-
-## Print the Column Names by Type
-# print dfNumeric.dtypes, dfString.dtypes
-
-## Create a list of columns containing substring
-## these are all the CTR, view and click statistics by tile
+## Renaming column names for tile related metrics
 allTiles = [
     'radar large'
     ,'radar small'
@@ -70,36 +52,56 @@ allTiles = [
     ,'video extra large'
 ]
 tileColumns = [x for x in df.columns if 'streams_ML_d28_t' in x]
-print allTiles, tileColumns
+for metric in ['_r', '_vi', '_cl']:
+    df.rename(columns = dict(zip([y for y in tileColumns if metric in y], [x + metric for x in allTiles])), inplace = True)
 
-## Lets look at the distribution for one of the tiles e.g. 'radar large'
-oneTile = 'radar large'
-tileColumn = 'context_streams_ML_d28_t_t' + str(allTiles.index(oneTile) + 1)
-for metric, bins in zip(['r', 'cl', 'vi'], [100,25,25]):
-    df[df[tileColumn + '_' + metric] < 100].hist(tileColumn + '_' + metric, bins = bins)
+## We have mixed types in our dataset
+## Select only numberic columns
+dfNumeric = df.select_dtypes(exclude=['object', 'long', 'datetime64'])
+dfString =  df.select_dtypes(include=['object'])
 
-## How are two tiles correlated to each other
-
-xName = 'radar large'
-yName = 'precip start large'
-xColumn = 'context_streams_ML_d28_t_t' + str(allTiles.index(xName) + 1) + '_r'
-yColumn = 'context_streams_ML_d28_t_t' + str(allTiles.index(yName) + 1) + '_r'
-
-## Scatter plots can break your Script. Downsample!
-dfSmall = df.sample(frac = 0.01)
-# Simple Scatter plot
-dfSmall.plot.scatter(x = xColumn, y = yColumn)
+# Quiz:
+#
+# How many observations are in our dataframe?
+# How many Numeric features do we have?
+# How many are categorical?
+# How many related to dates? (types: long, datetime64)
+#####
 
 
-# Plot with regression line
-import seaborn as sns
-sns.lmplot(x=xColumn,y=yColumn,data=dfSmall,fit_reg=True)
+#####
+
+
+#### Histrograms
+
+## Lets look at the distribution of CTR, Click and View counts
+##  for one of the tiles e.g. 'radar large'
+tilesChart = 'radar large'
+for metric, bins in zip(['_r', '_vi', '_cl'], [50,25,25]):
+    df[(df[tilesChart + metric] >0) & (df[tilesChart + metric] < 100)].hist(tilesChart + metric, bins = bins)
+
+## Comparing the CTR distribution of two  tiles
+bins = 25 # How many bins should there be in the histogram
+tilesChart = [x + "_r" for x in ['radar large','radar small']] # List of columns to be charted
+df[tilesChart][~(df[tilesChart] < 0).any(axis=1) & ~(df[tilesChart] > 100).any(axis=1)].plot.hist(bins = bins, alpha=0.5)
+
+#### Scatter plots
+
+## Look out: Scatter plots can break your Script,
+## as there can be millions of dots. Downsample!
+tilesChart = [x + "_r" for x in ['radar large','radar small']] # List of columns to be charted
+dfSampled = df[tilesChart][~(df[tilesChart] < 0).any(axis=1) &
+                           ~(df[tilesChart] > 100).any(axis=1)].sample(frac = 0.01) #Sampling 1% of observations
+sns.lmplot(x=tilesChart[0],
+           y=tilesChart[1],
+           data=dfSampled,
+           fit_reg=True) # Seaborn Plot with regression line
 
 
 # Quiz:
 #
 # Plot scatter plots between two other tiles and share with us
-# Copy relevant code first and then adapt it
+# Copy relevant code first and then adapt it below
 #####
 
 
