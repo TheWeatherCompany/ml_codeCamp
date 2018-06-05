@@ -53,7 +53,13 @@ allTiles = [
 ]
 tileColumns = [x for x in df.columns if 'streams_ML_d28_t' in x]
 for metric in ['_r', '_vi', '_cl']:
-    df.rename(columns = dict(zip([y for y in tileColumns if metric in y], [x + metric for x in allTiles])), inplace = True)
+    df.rename(columns =
+    dict(
+        zip(
+         ['context_streams_ML_d28_t_t' + str(x) + metric for x in range(1,len(allTiles))],
+         [x + metric for x in allTiles]
+        )
+    ), inplace = True)
 
 ## We have mixed types in our dataset
 ## Select only numberic columns
@@ -92,9 +98,10 @@ df[tilesChart][~(df[tilesChart] < 0).any(axis=1) & ~(df[tilesChart] > 100).any(a
 
 ## Look out: Scatter plots can break your Script,
 ## as there can be millions of dots. Downsample!
-tilesChart = [x + "_r" for x in ['radar large','radar small']] # List of columns to be charted
+tilesChart = [x + "_r" for x in ['radar large',
+                                 'precip start large']] # List of columns to be charted
 dfSampled = df[tilesChart][~(df[tilesChart] < 0).any(axis=1) &
-                           ~(df[tilesChart] > 100).any(axis=1)].sample(frac = 0.01) #Sampling 1% of observations
+                           ~(df[tilesChart] > 100).any(axis=1)].sample(frac = 0.05) #Sampling 1% of observations
 sns.lmplot(x=tilesChart[0],
            y=tilesChart[1],
            data=dfSampled,

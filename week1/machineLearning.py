@@ -53,5 +53,11 @@ allTiles = [
 ]
 tileColumns = [x for x in df.columns if 'streams_ML_d28_t' in x]
 for metric in ['_r', '_vi', '_cl']:
-    df.rename(columns = dict(zip([y for y in tileColumns if metric in y], [x + metric for x in allTiles])), inplace = True)
-
+    df.rename(columns =
+    dict(
+        zip(
+         ['context_streams_ML_d28_t_t' + str(x) + metric for x in range(1,len(allTiles))],
+         [x + metric for x in allTiles]
+        )
+    ), inplace = True)
+print
