@@ -68,7 +68,10 @@ dfString =  df.select_dtypes(include=['object'])
 # How many related to dates? (types: long, datetime64)
 #####
 
-
+print len(df)
+print len(dfNumeric.columns)
+print len(dfString.columns)
+dfString.columns
 #####
 
 
@@ -76,7 +79,7 @@ dfString =  df.select_dtypes(include=['object'])
 
 ## Lets look at the distribution of CTR, Click and View counts
 ##  for one of the tiles e.g. 'radar large'
-tilesChart = 'radar large'
+tilesChart = 'precip start large'
 for metric, bins in zip(['_r', '_vi', '_cl'], [50,25,25]):
     df[(df[tilesChart + metric] >0) & (df[tilesChart + metric] < 100)].hist(tilesChart + metric, bins = bins)
 
